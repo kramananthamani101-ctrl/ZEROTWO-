@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ZEROTWO AI</title>
+  <!-- App Icon from local storage -->
+<link rel="icon" href="ZEROTWO.png">
+
+<meta name="application-name" content="ZEROTWO">
+<meta name="theme-color" content="#00ffff">
+
+  <!-- STYLE: Jarvis-like UI -->
+  <style>
+    body {
+      background: black;
+      color: #00ffff;
+      text-align: center;
+      font-family: Arial;
+    }
+
+    .ring {
+      width: 220px;
+      height: 220px;
+      border: 4px solid #00ffff;
+      border-radius: 50%;
+      margin: 40px auto;
+      animation: glow 2s infinite;
+    }
+
+    @keyframes glow {
+      0% { box-shadow: 0 0 10px cyan; }
+      50% { box-shadow: 0 0 40px cyan; }
+      100% { box-shadow: 0 0 10px cyan; }
+    }
+
+    button {
+      padding: 15px 35px;
+      font-size: 18px;
+      background: cyan;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>ZEROTWO</h1>
+<div class="ring"></div>
+
+<button onclick="listen()">TALK TO ZEROTWO</button>
+<p id="text"></p>
+
+<script>
+/* -------------------------------
+   TEXT TO SPEECH (ZEROTWO VOICE)
+-------------------------------- */
+function speak(text) {
+  let msg = new SpeechSynthesisUtterance(text);
+  msg.rate = 1;
+  msg.pitch = 0.9;
+  speechSynthesis.speak(msg);
+}
+
+/* -------------------------------
+   SPEECH RECOGNITION (MIC INPUT)
+-------------------------------- */
+function listen() {
+  const rec = new webkitSpeechRecognition();
+  rec.lang = "en-US";
+  rec.start();
+
+  rec.onresult = (e) => {
+    let userText = e.results[0][0].transcript;
+    document.getElementById("text").innerText = "You: " + userText;
+    askAI(userText);
+  };
+}
+
+/* -------------------------------
+   CHATGPT CONNECTION (BRAIN)
+-------------------------------- */
+async function askAI(message) {
+
+  speak("Thinking...");
+
+  const response = await fetch(
+    "https://api.openai.com/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer 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"
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: "You are Zerotwo, a friendly intelligent assistant. Answer naturally."
+          },
+          {
+            role: "user",
+            content: message
+          }
+        ]
+      })
+    }
+  );
+
+  const data = await response.json();
+  let reply = data.choices[0].message.content;
+
+  document.getElementById("text").innerText += "\nZerotwo: " + reply;
+  speak(reply);
+}
+</script>
+
+</body>
+</html>
